@@ -59,8 +59,9 @@ def collaborative_filtering():
     if len(cold_start_ids) == 0:
         top5()
 
-    data = request.form
-    ratings_str = data.get('user_ratings', '')
+    req = request.get_json()
+    ratings_str = req["intentInfo"]["parameters"]["user_ratings"]['originalValue']
+
     ratings_list_str = ratings_str.split(',')
     cold_start_ratings = []
 
@@ -91,9 +92,14 @@ def collaborative_filtering():
     top_n_new_user = get_top_n(predictions_new_user, n=5)
     top_n_result = top_n_new_user[new_user_id]
 
-    res = "Based on the questionnaire, the books recommended to you are: \n"
+    answer = "Based on the questionnaire, the books recommended to you are: \n"
     for book in top_n_result:
-        res += f"{books.iloc[book[0]]['title']} by {books.iloc[book[0]]['authors']}; \n"
+        answer += f"{books.iloc[book[0]]['title']} by {books.iloc[book[0]]['authors']}; \n"
+    res = {
+        "fulfillment_response": {
+            "messages": [{"text": {"text": [answer]}}]
+        }
+    }
     return res
 
 

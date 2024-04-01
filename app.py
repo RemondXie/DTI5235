@@ -37,7 +37,8 @@ def web_hook():
     }
     return res
 
-@app.route('/top5')
+
+@app.route('/top5', methods=['GET', 'POST'])
 def top5():
     top5 = books.nlargest(5, 'work_ratings_count')
     recommendation_str = "Please provide your ratings (1-5) for the following books to avoid cold start:\n"
@@ -45,7 +46,12 @@ def top5():
     for _, row in top5.iterrows():
         recommendation_str += f"{row['title']} by {row['authors']}; \n"
         cold_start_ids.append(row['book_id'])
-    return recommendation_str
+    res = {
+        "fulfillment_response": {
+            "messages": [{"text": {"text": [recommendation_str]}}]
+        }
+    }
+    return res
 
 
 @app.route('/cf', methods=['POST'])

@@ -1,0 +1,5 @@
+Flask
+Flask_Cors
+pandas
+scikit_surprise
+gunicorn

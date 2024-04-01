@@ -26,6 +26,16 @@ cold_start_ids = []
 def hello_world():  # put application's code here
     return 'Hello World!'
 
+@app.route('/webhook', methods=['POST'])
+def web_hook():
+    req = request.get_json()
+    tag = req["fulfillmentInfo"]["tag"]
+    res = {
+        "fulfillment_response": {
+            "messages": [{"text": {"text": [tag]}}]
+        }
+    }
+    return res
 
 @app.route('/top5')
 def top5():

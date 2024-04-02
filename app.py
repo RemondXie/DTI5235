@@ -117,5 +117,65 @@ def get_top_n(predictions, n=10):
     return top_n
 
 
+@app.route('/specificBook', methods=['POST'])
+def specificBook():
+    req = request.get_json()
+    title = req["intentInfo"]["parameters"]["booktitle"]['originalValue']
+    ClusterData = pd.read_csv('static/OutputCluster.csv')
+
+    if not ClusterData['title'].isin([title]).any():
+        recommendation = f"Sorry, no books found for the title: {title}."
+    else:
+        BookSelectedData = ClusterData[ClusterData['title'] == title]
+        DataA = ClusterData[ClusterData['cluster'] == BookSelectedData['cluster'].item()]
+        distancelist = []
+        for i in range(len(DataA)):
+            distance = np.dot(DataA.iloc[i, -2:], BookSelectedData.iloc[0, -2:]) / (
+                    np.linalg.norm(DataA.iloc[i, -2:]) * np.linalg.norm(BookSelectedData.iloc[0, -2:]))
+            distancelist.append(distance)
+        DataA['distance'] = distancelist
+        DataA = DataA.sort_values(by='distance', ascending=False)
+
+        recommendation="The best match is \n"
+        for i in range(1,6):
+            recommendation+='{} ({}) \n'.format(DataA.iloc[i,-4],DataA.iloc[i,-5])
+    res = {
+        "fulfillment_response": {
+            "messages": [{"text": {"text": [recommendation]}}]
+        }
+    }
+    return res
+
+@app.route('/specificAuthor', methods=['POST'])
+def specificAuthor():
+    req = request.get_json()
+    author = req["intentInfo"]["parameters"]["author"]['originalValue']
+    ClusterData = pd.read_csv('static/OutputCluster.csv')
+
+    if not ClusterData['authors'].isin([author]).any():
+        recommendation = f"Sorry, no books found for the author: {author}."
+    else:
+        BookSelectedData = ClusterData[ClusterData['authors'] == author]
+        DataA = ClusterData[ClusterData['cluster'] == BookSelectedData.iloc[0]['cluster']]
+        distancelist = []
+        for i in range(len(DataA)):
+            distance = np.dot(DataA.iloc[i, -2:], BookSelectedData.iloc[0, -2:]) / (
+                    np.linalg.norm(DataA.iloc[i, -2:]) * np.linalg.norm(BookSelectedData.iloc[0, -2:]))
+            distancelist.append(distance)
+        DataA['distance'] = distancelist
+        DataA = DataA.sort_values(by='distance', ascending=False)
+
+        recommendation="The best match is \n"
+        for i in range(1,6):
+            recommendation+='{}'.format(DataA.iloc[i,-5])
+    res = {
+        "fulfillment_response": {
+            "messages": [{"text": {"text": [recommendation]}}]
+        }
+    }
+    return res
+
+
+
 if __name__ == '__main__':
     app.run()
